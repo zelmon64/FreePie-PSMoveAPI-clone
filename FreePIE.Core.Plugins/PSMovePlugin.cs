@@ -132,5 +132,17 @@ namespace FreePIE.Core.Plugins
         public bool getButtonReleased(PSMove.PSMoveButton button) { return plugin.GetButtonReleased(button); }
 
         public int trigger { get { return plugin.Trigger; } }
+
+        public float temperature { get { return plugin.Temperature; } }
+        public PSMove.PSMove_Battery_Level battery { get { return plugin.Battery; } }
+
+        public ushort ext { get { return plugin.ExtType; } }
+        public PSMove.ExtShooter shooter { get { return plugin.ExtShooter; } }
+        public PSMove.ExtWheel wheel { get { return plugin.ExtWheel; } }
+        public PSMove.ExtRumble wheelrumble { get { return plugin.WheelRumble; } }
+
+        //public int triggerval { get { return plugin.TriggerL2(); } }
+        //public int triggerval() { return plugin.TriggerVal();  }
+        //public int triggerR2 { get { return plugin.TriggerR2; } }
     }
 }

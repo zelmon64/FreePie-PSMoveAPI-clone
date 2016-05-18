@@ -64,7 +64,32 @@ namespace FreePIE.Core.Plugins.PSMove
 
         #endregion
 
+        #region External devises
+
+        [DllImport("libpsmoveapi", CallingConvention = CallingConvention.Cdecl)]
+        public static extern bool psmove_is_ext_connected(IntPtr move);
+
+        [DllImport("libpsmoveapi", CallingConvention = CallingConvention.Cdecl)]
+        //public static extern void psmove_get_ext_wheel(IntPtr move, IntPtr l2, IntPtr r2, IntPtr c1, IntPtr c2, IntPtr throttle);
+        public static extern ushort psmove_get_ext_type(IntPtr move);
+
+        [DllImport("libpsmoveapi", CallingConvention = CallingConvention.Cdecl)]
+        //public static extern void psmove_get_ext_wheel(IntPtr move, IntPtr l2, IntPtr r2, IntPtr c1, IntPtr c2, IntPtr throttle);
+        public static extern void psmove_get_ext_shooter(IntPtr move, ref int fire, ref int rl, ref int weap);
+
+        [DllImport("libpsmoveapi", CallingConvention = CallingConvention.Cdecl)]
+        //public static extern void psmove_get_ext_wheel(IntPtr move, IntPtr l2, IntPtr r2, IntPtr c1, IntPtr c2, IntPtr throttle);
+        public static extern void psmove_get_ext_wheel(IntPtr move, ref int l2, ref int r2, ref int throttle, ref int c1, ref int c2);
+
+        [DllImport("libpsmoveapi", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void psmove_set_ext_wheel(IntPtr move, int ruml, int rumr);
+
+        #endregion
+
         #region Battery and temps
+
+        [DllImport("libpsmoveapi", CallingConvention = CallingConvention.Cdecl)]
+        public static extern float psmove_get_temperature_in_celsius(IntPtr move);
 
         [DllImport("libpsmoveapi", CallingConvention = CallingConvention.Cdecl)]
         public static extern float psmove_get_temperature(IntPtr move);

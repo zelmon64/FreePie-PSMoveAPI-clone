@@ -5,6 +5,27 @@ using FreePIE.Core.Plugins.SensorFusion;
 
 namespace FreePIE.Core.Plugins.PSMove
 {
+    /*! Extension device information *
+    public struct PSMove_Ext_Device_Info
+    {
+        public ushort dev_id;
+        public char dev_info;//[38];
+    };
+
+    /*! Boolean type. Use them instead of 0 and 1 to improve code readability. 
+    public enum PSMove_Bool
+    {
+        PSMove_False = 0, /*!< False, Failure, Disabled (depending on context) 
+        PSMove_True = 1, /*!< True, Success, Enabled (depending on context) 
+    };
+    /*
+    public enum Extension_Device
+    {
+        Ext_Sharp_Shooter,
+        Ext_Racing_Wheel,
+        Ext_Unknown,
+    };*/
+
 
     public class PSMoveController : IUpdatable
     {
@@ -14,6 +35,10 @@ namespace FreePIE.Core.Plugins.PSMove
 
         private Vector3 position, rawPosition, centerPosition;
         private Vector3 gyroscope, accelerometer;
+        private ushort exttype;
+        private ExtShooter extshooter;
+        private ExtWheel extwheel;
+        private ExtRumble wheelrum;
         private Quaternion rotation;
         private RGB_Color led;
         private char rumble;
@@ -45,10 +70,14 @@ namespace FreePIE.Core.Plugins.PSMove
             this.buttons = 0;
             this.buttonsPressed = 0;
             this.buttonsReleased = 0;
-
+            this.exttype = (ushort)0;
+            this.extshooter = new ExtShooter();
+            this.extwheel = new ExtWheel();
+            this.wheelrum = new ExtRumble();
+            
             Global = new PSMoveGlobal(this);
         }
-
+        #region stuff
         // **************
         // Connection
         // **************
@@ -97,11 +126,18 @@ namespace FreePIE.Core.Plugins.PSMove
         public double Yaw { get { return rotation.Yaw; } }
         public double Pitch { get { return rotation.Pitch; } }
         public double Roll { get { return rotation.Roll; } }
+        public Quaternion Orientation { get { return rotation; } }
 
         public void resetOrientation() { PSMoveAPI.psmove_reset_orientation(move); }
 
         public Vector3 Gyroscope { get { return gyroscope; } }
         public Vector3 Accelerometer { get { return accelerometer; } }
+
+        public ushort ExtType { get { return exttype; } }
+        public ExtShooter ExtShooter { get { return extshooter; } }
+        //set { UpdateShooter(); } }
+        public ExtWheel ExtWheel { get { return extwheel; } }
+        //set { UpdateWheel(); } }
 
         // **************
         // Led and Rumble
@@ -119,6 +155,27 @@ namespace FreePIE.Core.Plugins.PSMove
                 PSMoveAPI.psmove_set_rumble(move, rumble);
             }
         }
+        /*        public ExtRumble WheelRumble
+        {
+            get
+            {
+                return (ExtRumble)wheelrum;
+            }
+            set
+            {
+                Console.WriteLine("setting rumble");
+                if (ext_connected == 2)
+                {
+                    wheelrum = value;
+                    int ruml = value.l;
+                    int rumr = value.r;
+                    PSMoveAPI.psmove_set_ext_wheel(move, ruml, rumr);
+                    Console.WriteLine("L: " + ruml + "R: " + rumr);
+                }
+            }
+        }*/
+
+        public ExtRumble WheelRumble { get { return (ExtRumble)wheelrum; } }
 
         public RGB_Color Led { get { return led; } }
 
@@ -163,6 +220,201 @@ namespace FreePIE.Core.Plugins.PSMove
             get { return (int)PSMoveAPI.psmove_get_trigger(move); }
         }
 
+        public float Temperature
+        {
+            get { return (float) PSMoveAPI.psmove_get_temperature_in_celsius(move); }
+        }
+
+        public PSMove_Battery_Level Battery
+        {
+            get { return (PSMove_Battery_Level)PSMoveAPI.psmove_get_battery(move); }
+        }
+        /*
+        public int TriggerL2
+        {
+            get { return (int)PSMoveAPI.psmove_get_trigger(move); }
+        }
+
+        public int TriggerR2
+        {
+            get { return (int)PSMoveAPI.psmove_get_trigger(move); }
+        }*/
+        #endregion
+        // ************
+        // Extention Devises
+        // **************
+
+        int ext_connected = 0;
+        bool wheelrum_on = false;
+        //enum Extension_Device ext_device = 0x0; // unknown
+
+
+        //public int TriggerL2()
+        //{ TriggerVal();
+        /*
+        int l2 = 0, r2 = 0, c1 = 0, c2 = 0, throttle = 0;
+        //IntPtr l2, r2, c1, c2, throttle;
+        //l2 = 0;
+      PSMoveAPI.psmove_get_ext_wheel(move, ref l2, ref r2, ref c1, ref c2, ref throttle);
+        //PSMoveAPI.psmove_get_ext_wheel(move, l2, r2, c1, c2, throttle);
+        if (l2 != 0 || r2 != 0 || c1 != 0 || c2 != 0 || throttle != 0)
+            Console.WriteLine("L2: " + l2 + " R2: " + r2 + " c1: " + c1 + " c2: " + c2 + " throttle: " + throttle);
+            */
+        //  return (int)0;
+        //}
+
+        //private void TriggerVal()
+
+
+        private void UpdateExt()
+        {
+            //this.exttype = PSMoveAPI.psmove_get_ext_type(move);
+            //if (PSMoveAPI.psmove_is_ext_connected(move))
+            //if (this.exttype !=0)
+            if (ext_connected == 0 )
+            {
+                /* if the extension device was not connected before, report connect */
+                //if (ext_connected == 0)
+                if (PSMoveAPI.psmove_is_ext_connected(move))
+                {
+                    //Console.WriteLine("device connected");
+                    this.exttype = PSMoveAPI.psmove_get_ext_type(move);
+                    ext_connected = this.exttype;
+                    switch (this.exttype)
+                    {
+                        case (1):
+                            Console.WriteLine("Sharp shooter connected");
+                            break;
+                        case (2):
+                            Console.WriteLine("Racing wheel connected");
+                            break;
+                        case (3):
+                            Console.WriteLine("Unknown connected");
+                            break;
+                        default:
+                            Console.WriteLine("Fail");
+                            break;
+                    }
+                }
+                //ext_connected = PSMoveAPI.psmove_get_ext_type(move);
+                //this.exttype = (ushort)ext_connected;
+                //ext_connected = 1;
+                //ext_connected = this.exttype;
+            }
+            else
+            {
+                if (!PSMoveAPI.psmove_is_ext_connected(move))
+                {
+                    Console.WriteLine("Extension device disconnected!");
+                    ext_connected = 0;
+                    this.exttype =  0;
+                }
+                /* if the extension device was connected before, report disconnect *
+                if (ext_connected != 0)
+                {
+                    Console.WriteLine("Extension device disconnected!");
+                }
+                ext_connected = 0;
+                */
+            }
+        }
+        private void UpdateWheel()
+        {
+            //while (PSMoveAPI.psmove_poll(move) == 0)
+            {
+            }
+            //Console.WriteLine("querying ext device");
+            //if (PSMoveAPI.psmove_is_ext_connected(move)) {
+            if (ext_connected == 2)
+            {
+                /* if the extension device was not connected before, report connect */
+                /*    if (ext_connected == 0)
+                    {
+                        Console.WriteLine("device connected");
+                    }
+                    ext_connected = 1;  
+                    */
+                int l2 = 0, r2 = 0, c1 = 0, c2 = 0, throttle = 0;
+
+                PSMoveAPI.psmove_get_ext_wheel(move, ref l2, ref r2, ref throttle, ref c1, ref c2);
+                //PSMoveAPI.psmove_get_ext_wheel(move, l2, r2, c1, c2, throttle);
+                extwheel.Update(l2, r2, throttle, c1==1, c2==1);
+                if (l2 != 0 || r2 != 0 || c1 != 0 || c2 != 0 || throttle != 0)
+                {
+                    //Console.WriteLine("L2: " + l2 + " R2: " + r2 + " c1: " + c1 + " c2: " + c2 + " throttle: " + throttle);
+                    //PSMoveAPI.psmove_set_ext_wheel(move, l2, r2);
+                }//else { PSMoveAPI.psmove_set_ext_wheel(move, 0, 0); }
+            }
+            /*
+            else {
+                /* if the extension device was connected before, report disconnect *
+                if (ext_connected == 1)
+                {
+                    Console.WriteLine("Extension device disconnected!\n");
+                }
+                ext_connected = 0;
+            }*/
+        }
+
+        private void UpdateWheelRumble()
+        {
+            if (ext_connected == 2)
+            {
+                if (wheelrum.l > 0 || wheelrum.r > 0)
+                {
+                    wheelrum_on = true;
+                    PSMoveAPI.psmove_set_ext_wheel(move, wheelrum.l, wheelrum.r);
+                    //Console.WriteLine("L: " + wheelrum.l + ", R: " + wheelrum.r);
+                }
+                else
+                {
+                    if (wheelrum_on)
+                    {
+                        PSMoveAPI.psmove_set_ext_wheel(move, 0, 0);
+                        //Console.WriteLine("L: " + 0 + ", R: " + 0);
+                        wheelrum_on = false;
+                    }
+                }
+            }
+        }
+
+        private void UpdateShooter()
+        {
+            //while (PSMoveAPI.psmove_poll(move) == 0)
+            {
+            }
+            //Console.WriteLine("querying ext device");
+            //if (PSMoveAPI.psmove_is_ext_connected(move))
+            if (ext_connected == 1)
+            {
+                /* if the extension device was not connected before, report connect *
+                if (ext_connected == 0)
+                {
+                    Console.WriteLine("device connected");
+                }
+                ext_connected = 1;*/
+                int fire = 0, rl =0, weapon = 0;
+
+                PSMoveAPI.psmove_get_ext_shooter(move, ref fire, ref rl, ref weapon);
+                //PSMoveAPI.psmove_get_ext_wheel(move, l2, r2, c1, c2, throttle);
+                extshooter.Update(fire==1, rl==1, weapon);
+                if (fire != 0 || rl != 0)
+                {
+                    //Console.WriteLine("L2: " + l2 + " R2: " + r2 + " c1: " + c1 + " c2: " + c2 + " throttle: " + throttle);
+                    //PSMoveAPI.psmove_set_ext_wheel(move, l2, r2);
+                }//else { PSMoveAPI.psmove_set_ext_wheel(move, 0, 0); }
+            }/*
+            else
+            {
+                /* if the extension device was connected before, report disconnect *
+                if (ext_connected == 1)
+                {
+                    Console.WriteLine("Extension device disconnected!\n");
+                }
+                ext_connected = 0;
+            }*/
+        }
+
         // Update Functions
 
         public void Update()
@@ -172,6 +424,10 @@ namespace FreePIE.Core.Plugins.PSMove
             UpdateOrientation();
             UpdateButtons();
             UpdateRumbleAndLED();
+            UpdateExt();
+            UpdateShooter();
+            UpdateWheel();
+            UpdateWheelRumble();
         }
 
         private void UpdatePosition()
@@ -195,7 +451,7 @@ namespace FreePIE.Core.Plugins.PSMove
         {
             // Orientation data
             PSMoveAPI.psmove_get_orientation(move, ref w, ref x, ref y, ref z);
-            rotation.Update(w, z, x, y, false); // This update without conjugation solves the yaw problem
+            rotation.Update(w, z, x, y, true); // This update without conjugation solves the yaw problem - changed to true for hydra emulation
 
             // Gyroscope data
             PSMoveAPI.psmove_get_gyroscope_frame(move,

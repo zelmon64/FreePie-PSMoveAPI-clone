@@ -37,6 +37,13 @@ namespace FreePIE.Core.Plugins.PSMove
         Move = 1 << 0x13,
         Trigger = 1 << 0x14
     };
+    /*
+    public enum Extension_Device
+    {
+        Ext_Sharp_Shooter = 0x1,
+        Ext_Racing_Wheel = 0x2,
+        Ext_Unknown = 0x0,
+    };*/
 
     public enum PSMove_Battery_Level
     {
@@ -127,6 +134,97 @@ namespace FreePIE.Core.Plugins.PSMove
         }
     }
 
+    public class ExtShooter
+    {
+        public bool fire{ get; set; }
+        public bool rl { get; set; }
+        public double weapon { get; set; }
+
+        public ExtShooter()
+        {
+            this.rl = this.fire = false;
+            this.weapon = 0;
+        }
+
+        public ExtShooter(bool fire, bool rl, double weapon)
+        {
+            Update(fire, rl, weapon);
+        }
+
+        public ExtShooter(ExtShooter b)
+        {
+            Update(b.fire, b.rl, b.weapon);
+        }
+
+        internal void Update(bool fire, bool rl, double weapon)
+        {
+            this.fire= fire;
+            this.rl = rl;
+            this.weapon = weapon;
+        }
+    }
+
+    public class ExtWheel
+    {
+        public double l { get; set; }
+        public double r { get; set; }
+        public double t { get; set; }
+        public bool cl { get; set; }
+        public bool cr { get; set; }
+
+        public ExtWheel()
+        {
+            this.r = this.l = this.t = 0;
+            this.cl = this.cr = false;
+        }
+
+        public ExtWheel(double l, double r, double t, bool cl, bool cr)
+        {
+            Update(l, r, t, cl, cr);
+        }
+
+        public ExtWheel(ExtWheel b)
+        {
+            Update(b.l, b.r, b.t, b.cl, b.cr);
+        }
+
+        internal void Update(double l, double r, double t, bool cl, bool cr)
+        {
+            this.l = l;
+            this.r = r;
+            this.t = t;
+            this.cl = cl;
+            this.cr = cr;
+        }
+    }
+
+    public class ExtRumble
+    {
+        public int l { get; set; }
+        public int r { get; set; }
+
+        public ExtRumble()
+        {
+            this.r = this.l = 0;
+        }
+
+        public ExtRumble(int l, int r)
+        {
+            Update(l, r);
+        }
+
+        public ExtRumble(ExtRumble b)
+        {
+            Update(b.l, b.r);
+        }
+
+        internal void Update(int l, int r)
+        {
+            this.l = l;
+            this.r = r;
+        }
+    }
+
     public class RGB_Color
     {
         internal char r, g, b;
@@ -162,6 +260,5 @@ namespace FreePIE.Core.Plugins.PSMove
             return (char)x;
         }
     }
-
     #endregion
 }
