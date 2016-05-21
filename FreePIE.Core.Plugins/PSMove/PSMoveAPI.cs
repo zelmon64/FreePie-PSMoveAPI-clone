@@ -60,7 +60,10 @@ namespace FreePIE.Core.Plugins.PSMove
         public static extern uint psmove_get_button_events(IntPtr move, ref uint pressed, ref uint released);
 
         [DllImport("libpsmoveapi", CallingConvention = CallingConvention.Cdecl)]
-        public static extern char psmove_get_trigger(IntPtr move);
+        public static extern ushort psmove_get_trigger(IntPtr move);
+
+        [DllImport("libpsmoveapi", CallingConvention = CallingConvention.Cdecl)]
+        public static extern ushort psmove_get_trigger2(IntPtr move);
 
         #endregion
 

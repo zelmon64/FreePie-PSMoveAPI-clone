@@ -215,9 +215,14 @@ namespace FreePIE.Core.Plugins.PSMove
             return (((int)button & buttonsReleased) != 0);
         }
 
-        public int Trigger
+        public ushort Trigger
         {
-            get { return (int)PSMoveAPI.psmove_get_trigger(move); }
+            get { return (ushort)PSMoveAPI.psmove_get_trigger(move); }
+        }
+
+        public ushort Trigger2
+        {
+            get { return (ushort)PSMoveAPI.psmove_get_trigger2(move); }
         }
 
         public float Temperature
